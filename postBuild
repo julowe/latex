@@ -3,6 +3,7 @@
 # NOTE: this script is not run as root user
 
 # maybe use https://discourse.jupyter.org/t/how-to-reduce-mybinder-org-repository-startup-time/4956/2 ? to pre-build docker image?
+# there is also a pre-built tex-live docker for small and other installs... https://hub.docker.com/r/texlive/texlive/tags?name=small
 ## install texlive manually
 # ok so do I just install the full tex and have it take an hour the first time this builds? How long do images stay around on the server? Will I have to wait an hour every 30 days? 7 days?
 # prob use medium or small scheme, then tlmgr to add anything else I need
@@ -25,8 +26,10 @@ zcat <install-tl-unx.tar.gz | tar xf -
 cd install-tl-2*
 perl ./install-tl --no-interaction --paper=letter --texdir=/home/jovyan/tex-live --scheme=small
 
+# I installed tex-live to the user's home dir because of course it is writeable,
+# but this also allows for any user to use the gui file explorer to upload a new CTAN package to the install if needed
 echo "export PATH=/home/jovyan/tex-live/bin/x86_64-linux:$PATH" >>/home/jovyan/.profile
-source ~/.profile
+source /home/jovyan/.profile
 
 echo "Which xelatex? $(which xelatex)"
 echo "Which tlmgr? $(which tlmgr)"
@@ -35,11 +38,6 @@ tlmgr info --only-installed
 
 # packages to install from ctan:
 tlmgr install datetime2 comment cm-super dvipng
-
-# copy in config file which tells the typesetter to run twice (to make table of contents and refs work)
-stat /home/jovyan/.jupyter/jupyter_notebook_config.py
-echo "c.LatexConfig.run_times = 2" >>/home/jovyan/.jupyter/jupyter_notebook_config.py
-echo "c.LatexConfig.cleanup = False" >>/home/jovyan/.jupyter/jupyter_notebook_config.py
 
 # run matplotlib once to generate the font cache
 python -c "import matplotlib as mpl; mpl.use('Agg'); import pylab as plt; fig, ax = plt.subplots(); fig.savefig('test.png')"
